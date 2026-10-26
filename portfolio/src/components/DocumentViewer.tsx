@@ -47,7 +47,8 @@ function DocumentViewer({ selected, select, close }: { selected: DocumentId; sel
   useLayoutEffect(() => {
     setTextMode(false); setLoaded(false); setFailed(false);
     if (document.id === 'resume') {
-      setZoom(0.54);
+      const isMobile = typeof window !== 'undefined' && window.innerWidth <= 760;
+      setZoom(isMobile ? 1 : 0.54);
       viewport.current?.scrollTo({ top: 0, left: 0 });
     } else {
       fitPage();
@@ -77,7 +78,6 @@ function DocumentViewer({ selected, select, close }: { selected: DocumentId; sel
               <button className="document-fit" onClick={() => setZoom(1)} disabled={textMode} aria-label="Fit preview to width">{Math.round(zoom * 100)}%</button>
               <button onClick={() => setZoom(value => Math.min(2.5, Math.round((value + .25) * 100) / 100))} disabled={textMode || zoom >= 2.5} aria-label="Zoom in"><Plus size={16} /></button>
             </div>
-            <button className="document-fit-page" onClick={fitPage} disabled={textMode} aria-label="Fit whole page" title="Fit whole page"><ScanLine size={17} /></button>
             <button className="document-text-toggle" onClick={() => setTextMode(value => !value)} aria-pressed={textMode}><Eye size={15} /><span>{textMode ? 'Show preview' : 'Readable text'}</span></button>
             <span className="document-page-count mono">{document.pages.length} {document.pages.length === 1 ? 'PAGE' : 'PAGES'}</span>
           </div>

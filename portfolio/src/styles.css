@@ -51,10 +51,14 @@ html[data-motion=off]{scroll-behavior:auto}html[data-motion=off] *,html[data-mot
 
 /* Final legibility and narrow-screen refinements. */
 .hero-name{font-size:9px;color:#a2b194}.credential-issuer{font-size:9px}.credential-preview-card .mono{font-size:8px}.arsenal-panel{animation:panelIn .35s ease-out}.timeline-details:not([hidden]){animation:panelIn .3s ease-out}.console-body{animation:panelIn .3s ease-out}@keyframes panelIn{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:1050px){.hero-name{font-size:7px}.credential-issuer{font-size:7px}.credential-preview-card .mono{font-size:6px}}
-@media(max-width:600px){.hero-background-grid{inset:0 -20px 80px 0}.hero-globe-wrap{width:calc(100% + 40px);margin-left:-20px;margin-right:-20px}.hero-name{font-size:7px}.credential-issuer{font-size:8px}.credential-preview-card .mono{font-size:7px}}
+@media(max-width:1050px){.hero-name{font-size:8.5px}.credential-issuer{font-size:8.5px}.credential-preview-card .mono{font-size:8px}}
+@media(max-width:800px){
+ .hero-eyebrow,.hero-name,.hero-credential,.fact-label,.section-label,.project-card-meta,.project-card-meta>span:last-child,.project-tags .tag,.archive-project-grid .tag,.archive-project-grid .project-card-meta,.art-topline,.art-caption,.art-bottom-note,.all-projects-bar,.simulation-disclaimer>span,.scenario-switcher>button,.console-status,.console-technique,.raw-logs>div,.context-lines>div,.verdict-label,.console-pipeline>span,.console-bottom>span,.about-quick-facts>span,.profile-art-top,.profile-art-bottom,.arsenal-panel-top,.skill-chips>button,.skill-level,.arsenal-panel-bottom>span,.arsenal-panel-bottom .muted,.credential-issuer,.credential-preview-card .mono,.footer-identity-role,.footer-meta,.privacy-note,.motion-toggle,.source-link-row,.archive-status,.repo-count,.repo-index,.repo-language,.case-back,.case-intro-bottom .tag,.external-demo-note,.case-cover-caption,.timeline-date,.timeline-date>span:last-child,.credential-full-top,.earned-status,.pursuing-badge,.contact-location>div>span,.contact-form-header,.form-privacy p{font-size:9px;line-height:1.5}
+}
+@media(max-width:600px){.hero-background-grid{inset:0 -20px 80px 0}.hero-globe-wrap{width:calc(100% + 40px);margin-left:-20px;margin-right:-20px}.hero-name{font-size:8.5px}.credential-issuer{font-size:9px}.credential-preview-card .mono{font-size:8.5px}}
 
 @media(max-width:360px){.hero h1{font-size:clamp(66px,21.2vw,77px)}}
 @media(max-width:360px){.hero-background-grid{right:-16px}.hero-globe-wrap{width:calc(100% + 32px);margin-left:-16px;margin-right:-16px}}
 .hero-background-grid{right:0}
 @media(min-width:601px) and (max-width:800px){.hero-globe-wrap{margin-right:-22px}}
+
