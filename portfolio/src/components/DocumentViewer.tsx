@@ -46,8 +46,13 @@ function DocumentViewer({ selected, select, close }: { selected: DocumentId; sel
   }, [document]);
   useLayoutEffect(() => {
     setTextMode(false); setLoaded(false); setFailed(false);
-    fitPage();
-  }, [selected, fitPage]);
+    if (document.id === 'resume') {
+      setZoom(0.54);
+      viewport.current?.scrollTo({ top: 0, left: 0 });
+    } else {
+      fitPage();
+    }
+  }, [selected, document.id, fitPage]);
   const size = `${(document.bytes / 1024).toFixed(0)} KB`;
   return <div className="document-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) close(); }}>
     <div className="document-viewer" role="dialog" aria-modal="true" aria-labelledby="document-viewer-title" aria-describedby="document-viewer-description" data-document-viewer ref={dialog}>
