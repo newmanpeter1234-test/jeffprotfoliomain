@@ -1397,6 +1397,7 @@ export async function mountSpatialShowcaseScene(
   let elapsed = 0;
   let playing = true;
   let focusedStation: number | null = null;
+  let focusHoldUntil = 0;
   let pointerX = 0;
   let pointerY = 0;
   let dampedPointerX = 0;
@@ -1442,6 +1443,12 @@ export async function mountSpatialShowcaseScene(
     const now = performance.now();
     const dt = Math.min(0.1, Math.max(0.001, (now - lastNow) / 1000));
     lastNow = now;
+
+    if (focusedStation !== null && now >= focusHoldUntil) {
+      // 4-second station hold completed: resume continuous tour smoothly from the end of this station
+      elapsed = focusedStation * STATION_DURATION + (STATION_DURATION - 0.35);
+      focusedStation = null;
+    }
 
     if (playing) {
       elapsed += dt;
@@ -1505,10 +1512,16 @@ export async function mountSpatialShowcaseScene(
       if (disposed) return;
       focusedStation = index;
       if (index !== null) {
-        elapsed = index * STATION_DURATION + 1.25;
-        const st = SHOWCASE_STATIONS[clamp(index, 0, SHOWCASE_STATIONS.length - 1)];
+        const clamped = clamp(index, 0, SHOWCASE_STATIONS.length - 1);
+        focusedStation = clamped;
+        focusHoldUntil = performance.now() + 4000;
+        playing = true;
+        elapsed = clamped * STATION_DURATION + 1.0;
+        const st = SHOWCASE_STATIONS[clamped];
         currentStationIdx = st.index;
         onStationChange?.(st, st.index);
+      } else {
+        focusHoldUntil = 0;
       }
       lastNow = performance.now();
       window.clearTimeout(frameId);

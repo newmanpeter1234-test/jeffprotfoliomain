@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowUpRight, Box, Film, Pause, Play, RotateCcw } from 'lucide-react';
+import { ArrowUpRight, Pause, Play } from 'lucide-react';
 import { asset, useExperience } from '../hooks/useExperience';
 import edit from '../data/liquid-glass.json';
 import type { ShowcaseStation, SpatialSceneController } from './SpatialShowcaseEngine';
@@ -8,7 +8,6 @@ import '../hero-showcase.css';
 import '../showreel.css';
 import '../liquid-glass.css';
 
-type Connection = EventTarget & { saveData?: boolean; effectiveType?: string; downlink?: number };
 export type ShowcaseCollection = {
   video: string;
   poster: string;
@@ -32,18 +31,6 @@ const INITIAL_STATIONS_META = [
   { id: 'wireshark', index: 7, short: 'PCAP', title: 'Wireshark Traffic Analysis', slug: 'wireshark-traffic-analysis', category: 'PACKET ANALYSIS', feature: 'Go beneath the surface.' },
 ];
 
-function policy() {
-  const connection = (navigator as Navigator & { connection?: Connection }).connection;
-  return {
-    reduced: matchMedia('(prefers-reduced-motion: reduce)').matches,
-    limited: Boolean(
-      connection?.saveData ||
-        /^(slow-2g|2g|3g)$/.test(connection?.effectiveType || '') ||
-        (typeof connection?.downlink === 'number' && connection.downlink < 1.2)
-    ),
-  };
-}
-
 export function HeroShowcase({ collection = portfolioShowcase }: { collection?: ShowcaseCollection }) {
   const { motion } = useExperience();
   const navigate = useNavigate();
@@ -51,53 +38,29 @@ export function HeroShowcase({ collection = portfolioShowcase }: { collection?: 
   const root = useRef<HTMLElement>(null);
   const webglMountRef = useRef<HTMLDivElement>(null);
   const controllerRef = useRef<SpatialSceneController | null>(null);
-  const video = useRef<HTMLVideoElement>(null);
+  const holdTimerRef = useRef<number>(0);
 
-  const [preferences, setPreferences] = useState(policy);
-  const [visible, setVisible] = useState(false);
+  // Start visible and running automatically as soon as the website opens
+  const [visible, setVisible] = useState(true);
   const [pageVisible, setPageVisible] = useState(!document.hidden);
   const [paused, setPaused] = useState(false);
-  const [manual, setManual] = useState(false);
-  const [playing, setPlaying] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [playing, setPlaying] = useState(true);
   const [webglReady, setWebglReady] = useState(false);
-  const [renderMode, setRenderMode] = useState<'webgl' | 'video'>('webgl');
   const [activeStationIdx, setActiveStationIdx] = useState(0);
   const [focusedStationIdx, setFocusedStationIdx] = useState<number | null>(null);
-  const [blocked, setBlocked] = useState(false);
   const [failed, setFailed] = useState(false);
   const [posterFailed, setPosterFailed] = useState(false);
 
   const offline = Boolean(window.__OFFLINE_PREVIEW__);
-  const automatic = motion && !preferences.reduced && !preferences.limited;
-  const permitted = !offline && !failed && (manual || automatic);
-  const shouldPlay = permitted && visible && pageVisible && !paused && (!blocked || manual);
-
-  useEffect(() => {
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)');
-    const connection = (navigator as Navigator & { connection?: Connection }).connection;
-    const update = () => {
-      setPreferences(policy());
-      setManual(false);
-    };
-    reduce.addEventListener('change', update);
-    connection?.addEventListener('change', update);
-    return () => {
-      reduce.removeEventListener('change', update);
-      connection?.removeEventListener('change', update);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!motion) setManual(false);
-  }, [motion]);
+  const permitted = !offline && !failed && motion;
+  const shouldPlay = permitted && visible && pageVisible && !paused;
 
   useEffect(() => {
     const node = root.current;
     if (!node) return;
     const observer = new IntersectionObserver(
-      ([entry]) => setVisible(entry.isIntersecting && entry.intersectionRatio >= 0.12),
-      { threshold: [0, 0.12] }
+      ([entry]) => setVisible(entry.isIntersecting),
+      { threshold: 0 }
     );
     observer.observe(node);
     const visibility = () => setPageVisible(!document.hidden);
@@ -108,45 +71,7 @@ export function HeroShowcase({ collection = portfolioShowcase }: { collection?: 
     };
   }, []);
 
-  // Synchronize the MP4 video element
-  useEffect(() => {
-    const media = video.current;
-    if (!media) return;
-    let cancelled = false;
-    if (shouldPlay) {
-      const timer = window.setTimeout(
-        () => {
-          if (cancelled) return;
-          if (!media.getAttribute('src')) media.src = asset(collection.video);
-          media.play()?.catch(() => {
-            if (!cancelled && media.getAttribute('src')) {
-              setBlocked(true);
-              setPlaying(false);
-              setReady(false);
-            }
-          });
-        },
-        manual ? 0 : 250
-      );
-      return () => {
-        cancelled = true;
-        window.clearTimeout(timer);
-        media.pause();
-      };
-    }
-    media.pause();
-    setPlaying(false);
-    if (!permitted && media.getAttribute('src')) {
-      media.removeAttribute('src');
-      media.load();
-      setReady(false);
-    }
-    return () => {
-      cancelled = true;
-    };
-  }, [shouldPlay, permitted, manual, collection.video]);
-
-  // Mount the live Three.js 3D Spatial Showcase once playback starts (and dispose when !permitted)
+  // Automatically mount and play the 3D Live WebGL scene when the website opens
   useEffect(() => {
     if (!permitted || offline || failed) {
       if (controllerRef.current) {
@@ -154,10 +79,9 @@ export function HeroShowcase({ collection = portfolioShowcase }: { collection?: 
         controllerRef.current = null;
       }
       setWebglReady(false);
+      setPlaying(false);
       return;
     }
-
-    if (!playing && !controllerRef.current) return;
 
     let cancelled = false;
     if (!controllerRef.current && webglMountRef.current) {
@@ -170,7 +94,10 @@ export function HeroShowcase({ collection = portfolioShowcase }: { collection?: 
               if (!cancelled) setActiveStationIdx(idx);
             },
             () => {
-              if (!cancelled) setWebglReady(true);
+              if (!cancelled) {
+                setWebglReady(true);
+                setPlaying(shouldPlay);
+              }
             }
           );
         })
@@ -181,23 +108,30 @@ export function HeroShowcase({ collection = portfolioShowcase }: { collection?: 
           }
           if (ctrl) {
             controllerRef.current = ctrl;
-            ctrl.setPlaying(playing && renderMode === 'webgl');
+            ctrl.setPlaying(shouldPlay);
+            setPlaying(shouldPlay);
           }
         })
         .catch(() => {
-          if (!cancelled) setWebglReady(false);
+          if (!cancelled) {
+            setFailed(true);
+            setWebglReady(false);
+            setPlaying(false);
+          }
         });
     } else if (controllerRef.current) {
-      controllerRef.current.setPlaying(playing && renderMode === 'webgl');
+      controllerRef.current.setPlaying(shouldPlay);
+      setPlaying(shouldPlay);
     }
 
     return () => {
       cancelled = true;
     };
-  }, [playing, permitted, offline, failed, renderMode]);
+  }, [shouldPlay, permitted, offline, failed]);
 
   useEffect(() => {
     return () => {
+      window.clearTimeout(holdTimerRef.current);
       if (controllerRef.current) {
         controllerRef.current.dispose();
         controllerRef.current = null;
@@ -206,53 +140,35 @@ export function HeroShowcase({ collection = portfolioShowcase }: { collection?: 
   }, []);
 
   function toggle() {
-    const media = video.current;
-    if (!media || offline) return;
+    if (offline) return;
     if (playing) {
       setPaused(true);
       setPlaying(false);
-      media.pause();
       controllerRef.current?.setPlaying(false);
       return;
     }
     setPaused(false);
-    setManual(true);
-    setBlocked(false);
     setFailed(false);
-    if (failed || !media.getAttribute('src')) {
-      media.src = asset(collection.video);
-      if (failed) media.load();
-    }
     controllerRef.current?.setPlaying(true);
-    media.play()?.catch((error) => {
-      if (error?.name === 'AbortError') return;
-      if (media.getAttribute('src')) {
-        setBlocked(true);
-        setManual(false);
-        setReady(false);
-      }
-    });
+    setPlaying(true);
   }
 
   function handleSelectStation(idx: number) {
-    if (!controllerRef.current) return;
-    if (focusedStationIdx === idx) {
-      setFocusedStationIdx(null);
-      controllerRef.current.setFocusedStation(null);
-    } else {
-      setFocusedStationIdx(idx);
-      setActiveStationIdx(idx);
-      controllerRef.current.setFocusedStation(idx);
-    }
-  }
+    window.clearTimeout(holdTimerRef.current);
+    setPaused(false);
+    setPlaying(true);
+    setActiveStationIdx(idx);
+    setFocusedStationIdx(idx);
+    controllerRef.current?.setFocusedStation(idx);
 
-  function handleResumeAutoTour() {
-    setFocusedStationIdx(null);
-    controllerRef.current?.setFocusedStation(null);
+    // Hold on the clicked station for 4 seconds, then automatically continue running the tour
+    holdTimerRef.current = window.setTimeout(() => {
+      setFocusedStationIdx(null);
+    }, 4000);
   }
 
   function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
-    if (!controllerRef.current || renderMode !== 'webgl') return;
+    if (!controllerRef.current) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const nx = ((e.clientX - rect.left) / Math.max(1, rect.width)) * 2 - 1;
     const ny = -(((e.clientY - rect.top) / Math.max(1, rect.height)) * 2 - 1);
@@ -264,7 +180,7 @@ export function HeroShowcase({ collection = portfolioShowcase }: { collection?: 
   }
 
   const currentMeta = INITIAL_STATIONS_META[activeStationIdx] || INITIAL_STATIONS_META[0];
-  const showWebglLayer = webglReady && renderMode === 'webgl' && !failed && permitted;
+  const showWebglLayer = webglReady && !failed && permitted;
 
   return (
     <figure
@@ -272,8 +188,8 @@ export function HeroShowcase({ collection = portfolioShowcase }: { collection?: 
       className="hero-showcase hero-showcase--glass"
       aria-label="Cinematic cybersecurity project preview"
       aria-describedby={descriptionId}
-      data-state={failed ? 'fallback' : playing ? 'playing' : ready ? 'paused' : 'poster'}
-      data-render-mode={showWebglLayer ? 'webgl' : 'video'}
+      data-state={failed ? 'fallback' : playing ? 'playing' : webglReady ? 'paused' : 'poster'}
+      data-render-mode="webgl"
     >
       <div className="showcase-window">
         <div
@@ -298,35 +214,6 @@ export function HeroShowcase({ collection = portfolioShowcase }: { collection?: 
             <div className="showcase-image-fallback" aria-hidden="true" />
           )}
 
-          <video
-            ref={video}
-            className={ready ? 'showcase-video is-ready' : 'showcase-video'}
-            width={collection.width}
-            height={collection.height}
-            muted
-            loop
-            playsInline
-            preload="none"
-            aria-hidden="true"
-            disablePictureInPicture
-            onPlaying={(event) => {
-              if (!shouldPlay || !event.currentTarget.getAttribute('src')) {
-                event.currentTarget.pause();
-                return;
-              }
-              setPlaying(true);
-              setReady(true);
-            }}
-            onPause={() => setPlaying(false)}
-            onError={() => {
-              if (video.current?.getAttribute('src')) {
-                setFailed(true);
-                setReady(false);
-                setPlaying(false);
-              }
-            }}
-          />
-
           {/* Dedicated mount container for live Three.js 3D WebGL scene */}
           <div
             ref={webglMountRef}
@@ -334,8 +221,8 @@ export function HeroShowcase({ collection = portfolioShowcase }: { collection?: 
             aria-hidden="true"
           />
 
-          {/* Top-left subtle HUD header when 3D WebGL or video is active */}
-          {ready && !failed && permitted && (
+          {/* Top-left subtle HUD header when 3D WebGL is active (no buttons on top-right) */}
+          {showWebglLayer && (
             <div className="showcase-hud-top" aria-hidden="true">
               <div className="showcase-hud-status">
                 <span className="showcase-hud-index">0{currentMeta.index + 1} / 08</span>
@@ -344,62 +231,6 @@ export function HeroShowcase({ collection = portfolioShowcase }: { collection?: 
                 <span className="showcase-hud-divider">·</span>
                 <span className="showcase-hud-title">{currentMeta.title}</span>
               </div>
-              <div className="showcase-hud-actions">
-                {focusedStationIdx !== null && showWebglLayer && (
-                  <span
-                    role="presentation"
-                    className="showcase-hud-chip is-highlight"
-                    onClick={handleResumeAutoTour}
-                  >
-                    <RotateCcw size={10} />
-                    <span>AUTO TOUR</span>
-                  </span>
-                )}
-                {webglReady && (
-                  <span
-                    role="presentation"
-                    className="showcase-hud-chip"
-                    onClick={() => setRenderMode((m) => (m === 'webgl' ? 'video' : 'webgl'))}
-                    title="Switch between Live 3D WebGL and MP4 video"
-                  >
-                    {renderMode === 'webgl' ? <Box size={10} /> : <Film size={10} />}
-                    <span>{renderMode === 'webgl' ? '3D LIVE' : 'MP4 FILM'}</span>
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Bottom interactive station dock when 3D WebGL is active */}
-          {showWebglLayer && (
-            <div className="showcase-station-dock" aria-hidden="true">
-              <div className="showcase-station-pills">
-                {INITIAL_STATIONS_META.map((st) => {
-                  const isCurrent = st.index === activeStationIdx;
-                  const isPinned = st.index === focusedStationIdx;
-                  return (
-                    <span
-                      key={st.id}
-                      role="presentation"
-                      className={`showcase-station-pill${isCurrent ? ' is-current' : ''}${isPinned ? ' is-pinned' : ''}`}
-                      onClick={() => handleSelectStation(st.index)}
-                      title={`${st.title} — ${st.feature}`}
-                    >
-                      <span className="pill-idx">0{st.index + 1}</span>
-                      <span className="pill-name">{st.short}</span>
-                    </span>
-                  );
-                })}
-              </div>
-              <span
-                role="presentation"
-                className="showcase-station-open"
-                onClick={() => navigate(`/projects/${currentMeta.slug}`)}
-                title={`Open ${currentMeta.title} case study`}
-              >
-                <span>INSPECT</span>
-                <ArrowUpRight size={11} />
-              </span>
             </div>
           )}
 
@@ -416,12 +247,46 @@ export function HeroShowcase({ collection = portfolioShowcase }: { collection?: 
           )}
         </div>
       </div>
+
+      {/* External horizontal station & Inspect bar positioned directly outside/below the showcase window */}
+      {!offline && (
+        <div className="showcase-station-dock showcase-station-dock--external" aria-hidden="true">
+          <div className="showcase-station-pills">
+            {INITIAL_STATIONS_META.map((st) => {
+              const isCurrent = st.index === activeStationIdx;
+              const isPinned = st.index === focusedStationIdx;
+              return (
+                <span
+                  key={st.id}
+                  role="presentation"
+                  className={`showcase-station-pill${isCurrent ? ' is-current' : ''}${isPinned ? ' is-pinned' : ''}`}
+                  onClick={() => handleSelectStation(st.index)}
+                  title={`${st.title} — ${st.feature}`}
+                >
+                  <span className="pill-idx">0{st.index + 1}</span>
+                  <span className="pill-name">{st.short}</span>
+                </span>
+              );
+            })}
+          </div>
+          <span
+            role="presentation"
+            className="showcase-station-open"
+            onClick={() => navigate(`/projects/${currentMeta.slug}`)}
+            title={`Open ${currentMeta.title} case study`}
+          >
+            <span>INSPECT</span>
+            <ArrowUpRight size={11} />
+          </span>
+        </div>
+      )}
+
       <figcaption id={descriptionId} className="sr-only">
         {collection.description}
       </figcaption>
       {failed && (
         <span className="sr-only" role="status">
-          Video unavailable. Static preview shown. Use the play control to retry.
+          3D preview unavailable. Static preview shown. Use the play control to retry.
         </span>
       )}
     </figure>
