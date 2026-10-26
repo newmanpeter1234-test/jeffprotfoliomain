@@ -1,11 +1,52 @@
-<div align="center">
+# Jeff Correya - Portfolio & Project Workspace
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+This repository contains the complete portfolio workspace, including the interactive web application, project deliverables, and uploaded certifications/resumes.
 
-  <h1>Built with AI Studio</h2>
+---
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## 📁 Repository Structure
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+```
+jeffportfolio/
+├── portfolio/          # Main interactive portfolio web application (Vite, TypeScript, React)
+│   ├── src/            # Source code, interactive components, 3D scenes
+│   ├── public/         # Public media, showreels, documents, high-fidelity footage
+│   ├── scripts/        # Motion processing, native clean capture scripts
+│   ├── tests/          # End-to-end and integration test suites
+│   ├── package.json    # Project dependencies and run scripts
+│   └── vite.config.ts  # Vite build configuration
+│
+├── deliverables/       # Exported standalone deliverables and portfolio review packages
+│   ├── Jefrine-Correya-Portfolio.html
+│   ├── Jefrine-Correya-Portfolio-Review.zip
+│   └── Jefrine-Portfolio-Review-2026-10-22.md
+│
+└── uploads/            # Raw documents, certifications, and media
+    ├── CICSA Certifcate.pdf
+    ├── ECC_CSA_Certificate.pdf
+    ├── Jefrine-experience.pdf
+    ├── jeffresume-qatar.pdf
+    └── PHOTO-2026-10-22-13-00-34.jpg
+```
 
-</div>
+---
+
+## 🚀 Getting Started with the Web Portfolio
+
+To run the interactive web application locally:
+
+```bash
+cd portfolio
+npm install
+npm run dev
+```
+
+The application will be served at `http://localhost:5173`.
+
+### Build & Preview
+
+```bash
+cd portfolio
+npm run build
+npm run preview
+```

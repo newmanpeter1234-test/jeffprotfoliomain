@@ -1,0 +1,14 @@
+{
+  "name": "jefrine-correya-portfolio-root",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "workspaces": [
+    "portfolio"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=portfolio",
+    "build": "npm run build --workspace=portfolio",
+    "preview": "npm run preview --workspace=portfolio"
+  }
+}
