@@ -31,7 +31,7 @@
       "destination": "/media/cybersecurity-native-glass.provenance.json"
     },
     {
-      "source": "/((?!media/|images/|fonts/|documents/|assets/|.well-known/|favicon.svg|robots.txt|sitemap.xml).*)",
+      "source": "/((?!api/|media/|images/|fonts/|documents/|assets/|.well-known/|favicon.svg|robots.txt|sitemap.xml).*)",
       "destination": "/index.html"
     }
   ],

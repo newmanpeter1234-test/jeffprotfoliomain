@@ -31,12 +31,12 @@ const repos = JSON.parse(await readFile('src/data/repository-index.json', 'utf8'
 assert.equal(repos.length, 26);
 const resume = await readFile(`public${profile.resume}`);
 assert.equal(resume.subarray(0, 4).toString(), '%PDF');
-assert.equal(createHash('sha256').update(resume).digest('hex'), '8872b51f624a402369ff9887d2651dbd6768e0bbd37027ff654596053eb6322d', 'Updated uploaded résumé preserved byte-for-byte');
+assert.equal(createHash('sha256').update(resume).digest('hex'), '1caaeff3b6d4d606c02947c9c86a824c88ed5e64e2abc47ae2e15a498ebb668f', 'Updated uploaded résumé preserved byte-for-byte');
 
 assert.equal(profile.timeZone, 'Asia/Qatar');
 const documents = JSON.parse(await readFile('src/data/documents.json', 'utf8'));
 const expectedDocuments = {
-  resume: '8872b51f624a402369ff9887d2651dbd6768e0bbd37027ff654596053eb6322d',
+  resume: '1caaeff3b6d4d606c02947c9c86a824c88ed5e64e2abc47ae2e15a498ebb668f',
   cicsa: 'e545bb08920e10d5f2b7ef6a119cacc4f94a8400ca80c349b5cb6bcfdf1af2ec',
   csa: 'b621e75367fd10b2ebb3e69525a68b8b3b3ece5b6797b5bf29c9798b6363d8a8',
   experience: '3d6fae5e6dfc767b04c3fc9c50b7898dc2905916acb4d1c0c87d42b7d107f741',

@@ -7,7 +7,11 @@
 .contact-send-status p{margin:0}
 .contact-send-status.error{color:#f4ddcc;border-color:#9a6845;background:#2a1d13}
 .contact-send-status a{display:inline-flex;align-items:center;gap:7px;color:var(--lime);text-decoration:underline;text-underline-offset:3px;margin-top:8px}
-.contact-send-spinner{animation:contact-send-spin .85s linear infinite}
+.contact-fallback-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px}
+.contact-fallback-actions a.contact-fallback-btn,.contact-fallback-actions button.contact-fallback-btn{display:inline-flex;align-items:center;gap:7px;margin-top:0;padding:8px 12px;border-radius:3px;border:1px solid #5c7842;background:#192812;color:#d6ecc0;font-family:var(--display);font-size:11px;font-weight:500;text-decoration:none;transition:background .2s,border-color .2s,color .2s}
+.contact-fallback-actions a.contact-fallback-btn.primary{background:var(--lime);border-color:var(--lime);color:#13200f;font-weight:600}
+.contact-fallback-actions a.contact-fallback-btn:hover,.contact-fallback-actions button.contact-fallback-btn:hover{border-color:var(--lime);color:var(--lime);background:#223619}
+.contact-fallback-actions a.contact-fallback-btn.primary:hover{background:#ddffb5;border-color:#ddffb5;color:#13200f}
+.contact-send-spinner,html[data-motion=off] .contact-send-spinner{animation:contact-send-spin .85s linear infinite!important}
 @keyframes contact-send-spin{to{transform:rotate(360deg)}}
-@media(prefers-reduced-motion:reduce){.contact-send-spinner{animation:none}}
-@media(max-width:760px){.contact-send-status{font-size:11px;padding:13px 14px}.contact-sending-note{font-size:10px}}
+@media(max-width:760px){.contact-send-status{font-size:11px;padding:13px 14px}.contact-sending-note{font-size:10px}.contact-fallback-actions{gap:8px}}

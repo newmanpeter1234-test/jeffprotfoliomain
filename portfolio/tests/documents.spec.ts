@@ -48,7 +48,7 @@ test('document room has keyboard focus containment, accessible text, zoom, and E
   await viewer.getByRole('button', { name: 'Fit preview to width' }).click();
   await expect(viewer.getByRole('button', { name: 'Fit preview to width' })).toHaveText('100%');
   await viewer.getByRole('button', { name: 'Readable text', exact: true }).click();
-  await expect(viewer.locator('.document-readable')).toContainText('SOC & Security Platform Engineer');
+  await expect(viewer.locator('.document-readable')).toContainText('Cybersecurity & IT Operations Professional');
   await expect(viewer.getByRole('button', { name: 'Zoom in', exact: true })).toBeDisabled();
   await page.keyboard.press('Escape');
   await expect(viewer).toHaveCount(0);
@@ -100,5 +100,5 @@ test('old résumé URL still returns the original bytes without a duplicate stor
   const response = await request.get('/assets/jeffresume%20.pdf');
   expect(response.ok()).toBe(true);
   const crypto = await import('node:crypto');
-  expect(crypto.createHash('sha256').update(await response.body()).digest('hex')).toBe('8872b51f624a402369ff9887d2651dbd6768e0bbd37027ff654596053eb6322d');
+  expect(crypto.createHash('sha256').update(await response.body()).digest('hex')).toBe('1caaeff3b6d4d606c02947c9c86a824c88ed5e64e2abc47ae2e15a498ebb668f');
 });

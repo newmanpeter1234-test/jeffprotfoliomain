@@ -7,8 +7,8 @@
     "portfolio"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace=portfolio",
-    "build": "npm run build --workspace=portfolio",
-    "preview": "npm run preview --workspace=portfolio"
+    "dev": "npm --prefix portfolio run dev",
+    "build": "npm --prefix portfolio run build",
+    "preview": "npm --prefix portfolio run preview"
   }
 }
